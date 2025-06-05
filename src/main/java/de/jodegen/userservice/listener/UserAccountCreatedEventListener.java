@@ -1,14 +1,12 @@
 package de.jodegen.userservice.listener;
 
 import de.jodegen.auction.event.UserAccountCreatedEvent;
-import de.jodegen.userservice.model.UserProfile;
+import de.jodegen.userservice.command.CreateUserProfileCommand;
 import de.jodegen.userservice.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
 
 @Slf4j
 @Component
@@ -21,12 +19,13 @@ public class UserAccountCreatedEventListener {
     public void handleUserAccountCreated(UserAccountCreatedEvent event) {
         log.info("Received user account created event: {}", event);
 
-        UserProfile userProfile = new UserProfile();
-        userProfile.setId(event.getUserId());
-        userProfile.setFirstName(event.getFirstName());
-        userProfile.setLastName(event.getLastName());
-        userProfile.setCreatedAt(LocalDateTime.now());
-        userProfileService.save(userProfile);
-        log.info("Created user profile: {}", userProfile);
+        var command = CreateUserProfileCommand.builder()
+                .userId(event.getUserId())
+                .firstName(event.getFirstName())
+                .lastName(event.getLastName())
+                .build();
+
+        userProfileService.createUserProfile(command);
+        log.info("Created user profile for user {}", event.getUserId());
     }
 }
